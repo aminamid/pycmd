@@ -15,3 +15,7 @@ pip install -r requirements.txt
 ## 
 
 ./dopycmd.py | jq '.[] | {name, slug}'
+
+## TODO
+
+* log to file

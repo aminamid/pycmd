@@ -1,3 +1,4 @@
 *.direnv
 *.pyc
 *.cfg
+*.dump

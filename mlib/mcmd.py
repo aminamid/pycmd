@@ -72,3 +72,9 @@ def _dict_to_tuples( dicts ):
 def get_cfgdict( cfg_list ):
     return dict([(k,v) for k,v in _dict_to_tuples( _convert_to_dicts( cfg_list ))])
 
+def put_cfgdict(st, cfg, encode):
+    import codecs
+    try:
+        codecs.open(st, 'w', 'utf_8').write(encode(cfg))
+    except IOError as e:
+        return None

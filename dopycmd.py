@@ -49,5 +49,5 @@ if __name__=='__main__':
 
     cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + sys.argv[1:])
     logconfigure(cfg)
-
+    mcmd.put_cfgdict( 'tmp/{0}.dump'.format(mname), cfg, yaml.dump )
     print json.dumps(main(cfg))
