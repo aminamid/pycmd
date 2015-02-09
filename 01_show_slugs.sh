@@ -1,11 +1,19 @@
-echo regions
-./dopycmd.py cmd/regions | jq '.[].slug'
-
-echo sizes
-./dopycmd.py cmd/sizes | jq '.[].slug'
-
-echo images
-./dopycmd.py cmd/images | jq '.[].slug'
-
-echo droplets
-./dopycmd.py cmd/droplets | jq '.[].slug'
+echo "## `date`"
+echo
+echo "### regions"
+echo
+echo \`\`\`json
+./dopycmd.py cmd/regions | jq '.'
+echo \`\`\`
+echo
+echo "### sizes"
+echo
+echo \`\`\`json
+./dopycmd.py cmd/sizes | jq '.'
+echo \`\`\`
+echo
+echo "### images"
+echo
+echo \`\`\`json
+./dopycmd.py cmd/images | jq '.'
+echo \`\`\`
