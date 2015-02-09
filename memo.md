@@ -1,4 +1,50 @@
-## Mon Feb  9 21:37:26 JST 2015
+## Mon Feb  9 21:57:59 JST 2015
+
+### only slugs
+
+```
+"nyc1"
+"ams1"
+"sfo1"
+"nyc2"
+"ams2"
+"sgp1"
+"lon1"
+"nyc3"
+"ams3"
+```
+
+```
+"512mb"
+"1gb"
+"2gb"
+"4gb"
+"8gb"
+"16gb"
+```
+
+```
+null
+null
+null
+"coreos-alpha"
+"coreos-beta"
+"coreos-stable"
+"fedora-20-x64"
+"fedora-20-x32"
+"fedora-19-x64"
+"fedora-19-x32"
+"centos-5-8-x64"
+"centos-5-8-x32"
+"debian-6-0-x64"
+"debian-6-0-x32"
+"fedora-21-x64"
+"ubuntu-14-04-x32"
+"ubuntu-14-04-x64"
+"ubuntu-14-10-x32"
+"ubuntu-14-10-x64"
+"freebsd-10-1-x64"
+```
 
 ### regions
 
