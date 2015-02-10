@@ -14,25 +14,50 @@ import sys
 import json
 import yaml
 
-def interfaces():
-    return [ traclogs ]
+class color:
+    BLUE = '\033[1;34m'
+    BLUEL = '\033[0;34m'
+    GREEN = '\033[1;32m'
+    GREENL = '\033[0;32m'
+    CYAN = '\033[1;36m'
+    CYANL = '\033[0;36m'
+    RED = '\033[1;31m'
+    REDL = '\033[0;31m'
+    PURPLE = '\033[1;35m'
+    PURPLEL = '\033[0;35m'
+    YELLOW = '\033[1;33m'
+    BROWN = '\033[0;33m'
+    WHITE = '\033[1;37m'
+    GRAYL = '\033[0;37m'
+    GRAYD = '\033[1;30m'
+    BLACK = '\033[0;30m'
+    ENDC = '\033[0m'
 
-def traclog( f ):
+
+class Style:
+    @classmethod
+    def color(self, x, case='default'):
+        col = { 'enter':color.GREEN, 'retrn':color.BLUE, 'default':'' }
+        return  '{1}{0}{2}'.format(x.__repr__(), col[case], color.ENDC )
+
+    @classmethod
+    def plain(self, x, case=None):
+        return '{0}'.format(x.__repr__())
+
+    @classmethod
+    def pretty(self, x, case=None):
+        import pp
+        return pp.pprintf(x)
+    
+
+
+def traclog( f, modname, log_style ):
+    style = getattr(Style, log_style)
     @wraps(f)
     def _f(*args, **kwargs):
-        logger.info("ENTER: {0}({1})".format(f.__name__, json.dumps(kwargs) ))
+        logger.debug("ENTER: {0}.{1}({2})".format(modname, f.__name__, style(kwargs, 'enter') if kwargs else style(args, 'enter')))
         result = f(*args, **kwargs)
-        logger.info("RETRN: {0} return {1}".format(f.__name__, json.dumps(result) ))
-        return result
-    return _f
-
-def traclogpp( f ):
-    import pp
-    @wraps(f)
-    def _f(*args, **kwargs):
-        logger.info("ENTER: {0}({1})".format(f.__name__, pp.pprintf(kwargs) ))
-        result = f(*args, **kwargs)
-        logger.info("RETRN: {0} return {1}".format(f.__name__, pp.pprintf(result) ))
+        logger.debug("RETRN: {0}.{1} return {2}".format(modname, f.__name__, style(result, 'retrn')))
         return result
     return _f
 
