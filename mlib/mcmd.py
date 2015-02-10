@@ -63,8 +63,8 @@ def _convert_to_dicts( cfg_list ):
 def get_cfgdict( cfg_list ):
     return concat_dicts([ x for x in _convert_to_dicts( cfg_list ) if x ] )
 
-def put_cfgdict(st, cfg, encode):
+def put_dict(st, status, encode):
     try:
-        codecs.open(st, 'w', 'utf_8').write(encode(cfg))
+        codecs.open(st, 'w', 'utf_8').write(encode(status))
     except IOError as e:
         return None

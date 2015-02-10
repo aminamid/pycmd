@@ -8,7 +8,7 @@ from functools import reduce
 
 from mlib import mlog
 from mlib import mcmd
-from mlib.mcommon import concat_dicts
+from mlib.mcommon import concat_dicts, datetimestr
 from dopy.manager import DoManager
 
 
@@ -66,5 +66,8 @@ if __name__=='__main__':
 
     cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + sys.argv[1:])
     logconfigure(cfg)
-    mcmd.put_cfgdict( 'tmp/{0}.dump'.format(mname), cfg, yaml.dump )
-    print json.dumps(main(cfg))
+    mcmd.put_dict( 'tmp/{0}.cfg.dump'.format(mname), cfg, yaml.dump )
+    result = main(cfg)
+    print json.dumps(result)
+    mcmd.put_dict( 'tmp/{0}.stat.{1}'.format(mname,datetimestr() ), result, json.dumps )
+    
