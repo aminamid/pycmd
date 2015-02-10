@@ -1,0 +1,10 @@
+new_droplet_template:
+  name: host
+  size_id: 512mb
+  image_id: centos-6-5-x64
+  region_id: sgp1
+  virtio: true
+  private_networking: true
+  backups_enabled: false
+  ssh_key_ids: [ 680960, 154691 ]
+

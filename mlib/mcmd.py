@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-import os
 import json
 import yaml
-from logging import basicConfig
+import codecs
 
-from mlib import mlog
-from dopy.manager import DoManager
-
+from mlib.mcommon import concat_dicts
 
 class CfgMustBeDict(Exception):
     def __init__(self, text):
@@ -55,28 +51,19 @@ def _try_json( st ):
     return None
 
 def _try_open( st ):
-    import codecs
     if not isinstance(st, basestring): return None
     try:
         return codecs.open(st,'r', 'utf_8').read()
     except (TypeError, IOError) as e:
         return None
 
-def _concat( lsts ):
-    from itertools import chain
-    return list(chain(*lsts))
-
 def _convert_to_dicts( cfg_list ):
     return map(parse, cfg_list)
 
-def _dict_to_tuples( dicts ):
-    return _concat([d.items() for d in dicts ])
-
 def get_cfgdict( cfg_list ):
-    return dict([(k,v) for k,v in _dict_to_tuples( [ x for x in _convert_to_dicts( cfg_list ) if x ] )])
+    return concat_dicts([ x for x in _convert_to_dicts( cfg_list ) if x ] )
 
 def put_cfgdict(st, cfg, encode):
-    import codecs
     try:
         codecs.open(st, 'w', 'utf_8').write(encode(cfg))
     except IOError as e:

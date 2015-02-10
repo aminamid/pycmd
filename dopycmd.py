@@ -4,10 +4,11 @@
 import json
 import yaml
 import inspect
-import functools
+from functools import reduce
 
 from mlib import mlog
 from mlib import mcmd
+from mlib.mcommon import concat_dicts
 from dopy.manager import DoManager
 
 
@@ -18,14 +19,14 @@ logging:
 log_targets:
   - [DoManager]
   - [json]
+log_style: color # plain | color | pretty
 dopy:
   client_id: None
   api_key: "apikey"
   api_version: 2
-log_style: color # plain | color | pretty
 """
 def loggify(objlist, wrapper, log_style):
-    target = functools.reduce( getattr,  [globals()[objlist[0]]] + objlist[1:] )
+    target = reduce( getattr,  [globals()[objlist[0]]] + objlist[1:] )
     attrs = [ a for (a,b) in inspect.getmembers(target) if inspect.ismethod(b) or inspect.isfunction(b) ]
     if not attrs:
         target = wrapper(target,target.__name__, log_style)
@@ -35,16 +36,24 @@ def loggify(objlist, wrapper, log_style):
 
 def logconfigure(cfg):
     if not ('logenabled',True) in cfg.items(): return
-    if not 'log_targets' in cfg: return
     mlog.to_stderr(cfg['logging'])
+
+    if not 'log_targets' in cfg: return
     for objlist in cfg['log_targets']:
         loggify( objlist, mlog.traclog,  cfg['log_style'] )
 
 def main(cfg):
     do = DoManager(**cfg['dopy'])
-    if cfg['subcmd'] in ['all_regions', 'all_images', 'sizes', 'all_active_droplets','all_domains', 'all_actions']:
+    if cfg['subcmd'] in ['all_regions', 'all_images', 'sizes', 'all_active_droplets','all_domains', 'all_actions', 'all_ssh_keys']:
         method = getattr(do, cfg['subcmd'])
         return method()
+    if cfg['subcmd'] in ['new_droplet']:
+        method = getattr(do, cfg['subcmd'])
+        result = method(**concat_dicts([cfg['new_droplet_template'], cfg['parms']] ))
+        return result
+    if cfg['subcmd'] in ['destroy_droplet']:
+        method = getattr(do, cfg['subcmd'])
+        return method(**cfg['parms'])
 
 
 if __name__=='__main__':
