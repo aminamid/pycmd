@@ -13,13 +13,16 @@ from dopy.manager import DoManager
 
 
 defaultcfg="""---
-logenabled: true
-logging:
-  level: 10
-log_targets:
-  - [DoManager]
-  - [json]
-log_style: color # plain | color | pretty
+mlog:
+  enabled: true
+  basicconfig:
+    level: 10
+  patch:
+    enabled: true
+    style: color # plain | color | pretty
+    targets:
+    - [DoManager]
+    - [json]
 dopy:
   client_id: None
   api_key: "apikey"
@@ -35,12 +38,13 @@ def loggify(objlist, wrapper, log_style):
             setattr(target, attr, wrapper(getattr(target, attr),target.__name__, log_style))
 
 def logconfigure(cfg):
-    if not ('logenabled',True) in cfg.items(): return
-    mlog.to_stderr(cfg['logging'])
+    mlogcfg = cfg['mlog']
+    if not ('enabled',True) in mlogcfg.items(): return
+    mlog.to_stderr(mlogcfg['basicconfig'])
 
-    if not 'log_targets' in cfg: return
-    for objlist in cfg['log_targets']:
-        loggify( objlist, mlog.traclog,  cfg['log_style'] )
+    if not ('enabled',True) in mlogcfg['patch'].items(): return
+    for objlist in mlogcfg['patch']['targets']:
+        loggify( objlist, mlog.traclog,  mlogcfg['patch']['style'] )
 
 def main(cfg):
     do = DoManager(**cfg['dopy'])
