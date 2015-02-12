@@ -12,17 +12,16 @@ from dopy.manager import DoManager
 
 defaultcfg="""---
 mlog:
-  enabled: false
+  enabled: true
   basicconfig:
     level: 10
     stream: sys.stdout
   fmt: default  # default | json
   patch:
     enabled: true
-    style: color # plain | color | pretty
+    style: json # plain | color | pretty | json
     targets:
     - [DoManager]
-    - [json]
 dopy:
   client_id: None
   api_key: "apikey"
@@ -63,10 +62,7 @@ if __name__=='__main__':
 
     defaultcfgfile =  '{0}.cfg'.format(myname) if os.path.exists('{0}.cfg'.format(myname)) else None
 
-    # trace 
-    # mlog.logconfigure(yaml.load('{enabled: true, basicconfig: {level: 10}, patch: {enabled: true, style: color, targets: [[mcmd]] } }'), lambda x: globals()[x])
-
-    subcmds = ['ls', 'll', 'cat', 'images']
+    subcmds = ['ls', 'll', 'cat', 'images', 'sizes']
    
     args = sys.argv[1:]
     strong_subcmd = None if len(args) < 1 or not args[0] in subcmds else args.pop(0)
@@ -74,12 +70,10 @@ if __name__=='__main__':
     cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + args)
     if strong_subcmd : cfg['subcmd'] = strong_subcmd
 
+    cfg['mlog']['basicconfig']['stream'] = "tmp/{0}.{1}".format(myname,datetimestr())
     mlog.logconfigure(cfg['mlog'], lambda x: globals()[x])
 
-    mcmd.put_dict( 'tmp/{0}.cfg.dump'.format(myname), cfg, yaml.dump )
+    main=mcmd.store_lastfunc(main, myname)
 
     result = main(cfg)
     print json.dumps(result)
-
-    mcmd.put_dict( 'tmp/{0}.dump'.format(myname), result, json.dumps )
-    

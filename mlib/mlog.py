@@ -55,6 +55,10 @@ class Style:
     def pretty(self, x, case=None):
         import pp
         return pp.pprintf(x)
+
+    @classmethod
+    def json(self, x, case=None):
+        return json.dumps(json_convert(x))
     
 
 
@@ -62,9 +66,9 @@ def traclog( f, modname, log_style ):
     style = getattr(Style, log_style)
     @wraps(f)
     def _f(*args, **kwargs):
-        logger.debug("ENTER: {0}.{1}({2})".format(modname, f.__name__, style(kwargs, 'enter') if kwargs else style(args, 'enter')))
+        logger.debug("ENTER:{0}.{1} {2}".format(modname, f.__name__, style(kwargs, 'enter') if kwargs else style(args, 'enter')))
         result = f(*args, **kwargs)
-        logger.debug("RETRN: {0}.{1} return {2}".format(modname, f.__name__, style(result, 'retrn')))
+        logger.debug("RETRN:{0}.{1} {2}".format(modname, f.__name__, style(result, 'retrn')))
         return result
     return _f
 
@@ -96,4 +100,26 @@ def logconfigure(mlogcfg, get_mainglobs):
     if not ('enabled',True) in mlogcfg['patch'].items(): return
     for objlist in mlogcfg['patch']['targets']:
         loggify( get_mainglobs(objlist[0]), objlist[1:], traclog,  mlogcfg['patch']['style'] )
+
+def json_convert(obj):
+    if isinstance(obj, (float)):
+        return obj
+    elif isinstance(obj, ( bool )):
+        return obj
+    elif isinstance(obj, ( int, long, complex )):
+        return obj
+    elif isinstance(obj, ( unicode )):
+        return obj
+    elif isinstance(obj, ( str )):
+        return obj
+    elif isinstance(obj, ( dict )):
+        return dict((k, json_convert(v)) for k, v in obj.items())
+    elif isinstance(obj, (list, tuple)):
+        return map(json_convert, obj)
+    elif isinstance(obj, type(None)):
+        return 'None'
+    elif hasattr(obj, '__dict__') :
+        return dict((k, json_convert(v)) for k, v in obj.__dict__.items())
+    else:
+        return '"json_convert: cannot decode"'
 

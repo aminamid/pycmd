@@ -4,6 +4,7 @@
 import json
 import yaml
 import codecs
+from functools import wraps
 
 from mlib.mcommon import concat_dicts
 
@@ -71,3 +72,14 @@ def put_dict(st, status, encode):
         codecs.open(st, 'w', 'utf_8').write(encode(status))
     except IOError as e:
         return None
+
+def store_lastfunc( f, fname=None ):
+    fname = f.__name__ if not fname else fname
+    @wraps(f)
+    def _f(*args, **kwargs):
+        put_dict( 'tmp/{0}.args.dump'.format(fname), kwargs if kwargs else args, json.dumps )
+        result = f(*args, **kwargs)
+        put_dict( 'tmp/{0}.rslt.dump'.format(fname), result, json.dumps )
+        return result
+    return _f
+
