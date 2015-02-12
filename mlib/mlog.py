@@ -13,6 +13,7 @@ datefmt: "%Y%m%d %H%M%S"
 import sys
 import json
 import yaml
+import inspect
 
 class color:
     BLUE = '\033[1;34m'
@@ -72,4 +73,20 @@ def to_file(logcfg={'level': 30}):
     logcfg_dict = dictmerge(dictmerge(yaml.load(defaultcfg),logcfg), {'stream': sys.stderr}) 
     basicConfig(**logcfg_dict)
 
+def loggify(obj, objlist_tail, wrapper, log_style):
+    target = reduce( getattr,  [obj] + objlist_tail )
+    attrs = [ a for (a,b) in inspect.getmembers(target) if inspect.ismethod(b) or inspect.isfunction(b) ]
+    if not attrs:
+        target = wrapper(target,target.__name__, log_style)
+    else:
+        for attr in attrs:
+            setattr(target, attr, wrapper(getattr(target, attr),target.__name__, log_style))
+
+def logconfigure(mlogcfg, get_mainglobs):
+    if not ('enabled',True) in mlogcfg.items(): return
+    to_stderr(mlogcfg['basicconfig'])
+
+    if not ('enabled',True) in mlogcfg['patch'].items(): return
+    for objlist in mlogcfg['patch']['targets']:
+        loggify( get_mainglobs(objlist[0]), objlist[1:], traclog,  mlogcfg['patch']['style'] )
 

@@ -3,8 +3,6 @@
 
 import json
 import yaml
-import inspect
-from functools import reduce
 
 from mlib import mlog
 from mlib import mcmd
@@ -28,23 +26,6 @@ dopy:
   api_key: "apikey"
   api_version: 2
 """
-def loggify(objlist, wrapper, log_style):
-    target = reduce( getattr,  [globals()[objlist[0]]] + objlist[1:] )
-    attrs = [ a for (a,b) in inspect.getmembers(target) if inspect.ismethod(b) or inspect.isfunction(b) ]
-    if not attrs:
-        target = wrapper(target,target.__name__, log_style)
-    else:
-        for attr in attrs:
-            setattr(target, attr, wrapper(getattr(target, attr),target.__name__, log_style))
-
-def logconfigure(cfg):
-    mlogcfg = cfg['mlog']
-    if not ('enabled',True) in mlogcfg.items(): return
-    mlog.to_stderr(mlogcfg['basicconfig'])
-
-    if not ('enabled',True) in mlogcfg['patch'].items(): return
-    for objlist in mlogcfg['patch']['targets']:
-        loggify( objlist, mlog.traclog,  mlogcfg['patch']['style'] )
 
 def main(cfg):
     do = DoManager(**cfg['dopy'])
@@ -68,10 +49,16 @@ if __name__=='__main__':
     mname = os.path.splitext(__file__)[0]
     defaultcfgfile =  '{0}.cfg'.format(mname) if os.path.exists('{0}.cfg'.format(mname)) else None
 
+    
+    mlog.logconfigure(yaml.load('{enabled: true, basicconfig: {level: 10}, patch: {enabled: true, style: color, targets: [[mcmd]] } }'), lambda x: globals()[x])
     cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + sys.argv[1:])
-    logconfigure(cfg)
+
+    mlog.logconfigure(cfg['mlog'], lambda x: globals()[x])
+
     mcmd.put_dict( 'tmp/{0}.cfg.dump'.format(mname), cfg, yaml.dump )
+
     result = main(cfg)
     print json.dumps(result)
+
     mcmd.put_dict( 'tmp/{0}.stat.{1}'.format(mname,datetimestr() ), result, json.dumps )
     
