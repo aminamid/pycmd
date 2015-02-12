@@ -66,7 +66,7 @@ if __name__=='__main__':
     import sys
  
     mname = os.path.splitext(__file__)[0]
-    defaultcfgfile =  '{0}.cfg'.format(mname) 
+    defaultcfgfile =  '{0}.cfg'.format(mname) if os.path.exists('{0}.cfg'.format(mname)) else None
 
     cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + sys.argv[1:])
     logconfigure(cfg)
