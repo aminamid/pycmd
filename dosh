@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import json
+import yaml
+
+from mlib import mlog
+from mlib import mcmd
+from mlib.mcommon import concat_dicts, datetimestr
+from dopy.manager import DoManager
+
+
+defaultcfg="""---
+mlog:
+  enabled: false
+  basicconfig:
+    level: 10
+    stream: sys.stdout
+  fmt: default  # default | json
+  patch:
+    enabled: true
+    style: color # plain | color | pretty
+    targets:
+    - [DoManager]
+    - [json]
+dopy:
+  client_id: None
+  api_key: "apikey"
+  api_version: 2
+"""
+
+def main(cfg):
+    converter_yml = """---
+    regions: all_regions
+    images: all_images
+    actions: all_ations
+    keys: all_ssh_keys
+    ls: all_active_droplets
+    """
+    converter = yaml.load(converter_yml)
+
+    do = DoManager(**cfg['dopy'])
+    subcmd = cfg['subcmd'] if not cfg['subcmd'] in converter else converter[cfg['subcmd']]
+
+    if subcmd in ['all_regions', 'all_images', 'sizes', 'all_active_droplets','all_domains', 'all_actions', 'all_ssh_keys']:
+        method = getattr(do, subcmd)
+        return method()
+    if subcmd in ['new_droplet']:
+        method = getattr(do, subcmd)
+        result = method(**concat_dicts([cfg['new_droplet_template'], cfg['parms']] ))
+        return result
+    if subcmd in ['destroy_droplet']:
+        method = getattr(do, subcmd)
+        return method(**cfg['parms'])
+
+
+if __name__=='__main__':
+
+    import os
+    import sys
+ 
+    myname = os.path.splitext(__file__)[0]
+
+    defaultcfgfile =  '{0}.cfg'.format(myname) if os.path.exists('{0}.cfg'.format(myname)) else None
+
+    # trace 
+    # mlog.logconfigure(yaml.load('{enabled: true, basicconfig: {level: 10}, patch: {enabled: true, style: color, targets: [[mcmd]] } }'), lambda x: globals()[x])
+
+    subcmds = ['ls', 'll', 'cat', 'images']
+   
+    args = sys.argv[1:]
+    strong_subcmd = None if len(args) < 1 or not args[0] in subcmds else args.pop(0)
+
+    cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + args)
+    if strong_subcmd : cfg['subcmd'] = strong_subcmd
+
+    mlog.logconfigure(cfg['mlog'], lambda x: globals()[x])
+
+    mcmd.put_dict( 'tmp/{0}.cfg.dump'.format(myname), cfg, yaml.dump )
+
+    result = main(cfg)
+    print json.dumps(result)
+
+    mcmd.put_dict( 'tmp/{0}.dump'.format(myname), result, json.dumps )
+    

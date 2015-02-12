@@ -7,6 +7,9 @@ import codecs
 
 from mlib.mcommon import concat_dicts
 
+# trace
+# mlog.logconfigure(yaml.load('{enabled: true, basicconfig: {level: 10}, patch: {enabled: true, style: color, targets: [[mcmd]] } }'), lambda x: globals()[x])
+
 class CfgMustBeDict(Exception):
     def __init__(self, text):
         self._text = text

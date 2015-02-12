@@ -6,14 +6,20 @@ logger = getLogger(__name__)
 
 from functools import wraps
 
-defaultcfg="""---
-format: "%(asctime)s%(msecs).03d %(process)d %(thread)x %(levelname).4s;%(module)s(%(lineno)d/%(funcName)s) %(message)s"
-datefmt: "%Y%m%d %H%M%S"
+formats="""---
+default:
+  format: "%(asctime)s%(msecs).03d %(process)d %(thread)x %(levelname).4s;%(module)s(%(lineno)d/%(funcName)s) %(message)s"
+  datefmt: "%Y%m%d %H%M%S"
+json:
+  format: '{ "time": "%(asctime)s.%(msecs).03dZ", "pid": %(process)d, "tid": "%(thread)x", "loglevel": "%(levelname).4s", "module": { "name": "%(module)s", "line": %(lineno)d, "funcname": "%(funcName)s", "msg": "%(message)s" }}'
+  datefmt: "%Y/%m/%dT%H:%M:%S"
 """
+
 import sys
 import json
 import yaml
 import inspect
+import codecs
 
 class color:
     BLUE = '\033[1;34m'
@@ -65,13 +71,14 @@ def traclog( f, modname, log_style ):
 def dictmerge(old, new):
     return dict([(k,v) for k,v in old.items()+new.items()])
 
-def to_stderr(logcfg={'level': 30}):
-    logcfg_dict = dictmerge(dictmerge(yaml.load(defaultcfg),logcfg), {'stream': sys.stderr}) 
-    basicConfig(**logcfg_dict)
+def openstream(stream_name = "sys.stderr"):
+    if not stream_name or stream_name == "sys.stderr": return codecs.getwriter('utf_8')(sys.stderr)
+    if stream_name == "sys.stdout": return codecs.getwriter('utf_8')(sys.stdout)
+    return codecs.open(stream_name, 'a', 'utf_8')
 
-def to_file(logcfg={'level': 30}):
-    logcfg_dict = dictmerge(dictmerge(yaml.load(defaultcfg),logcfg), {'stream': sys.stderr}) 
-    basicConfig(**logcfg_dict)
+def logging_init(logcfg={'level': 30 }, fmt="default"):
+    logcfg_dict = dictmerge(yaml.load(formats)[fmt],logcfg)
+    basicConfig(**dictmerge( logcfg_dict, { "stream": openstream() if not 'stream' in logcfg_dict else openstream(logcfg_dict['stream'])} ) )
 
 def loggify(obj, objlist_tail, wrapper, log_style):
     target = reduce( getattr,  [obj] + objlist_tail )
@@ -84,7 +91,7 @@ def loggify(obj, objlist_tail, wrapper, log_style):
 
 def logconfigure(mlogcfg, get_mainglobs):
     if not ('enabled',True) in mlogcfg.items(): return
-    to_stderr(mlogcfg['basicconfig'])
+    logging_init(mlogcfg['basicconfig'], 'default' if not 'fmt' in mlogcfg else mlogcfg['fmt'])
 
     if not ('enabled',True) in mlogcfg['patch'].items(): return
     for objlist in mlogcfg['patch']['targets']:
