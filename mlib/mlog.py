@@ -84,9 +84,13 @@ def logging_init(logcfg={'level': 30 }, fmt="default"):
     logcfg_dict = dictmerge(yaml.load(formats)[fmt],logcfg)
     basicConfig(**dictmerge( logcfg_dict, { "stream": openstream() if not 'stream' in logcfg_dict else openstream(logcfg_dict['stream'])} ) )
 
+def isclassmethod( m ):
+    return inspect.ismethod(m) and inspect.isclass(m.__self__)
+
 def loggify(obj, objlist_tail, wrapper, log_style):
     target = reduce( getattr,  [obj] + objlist_tail )
     attrs = [ a for (a,b) in inspect.getmembers(target) if inspect.ismethod(b) or inspect.isfunction(b) ]
+    classmethods = [ a for (a,b) in inspect.getmembers(target) if isclassmethod(b) ]
     if not attrs:
         target = wrapper(target,target.__name__, log_style)
     else:

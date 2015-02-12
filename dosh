@@ -6,7 +6,7 @@ import yaml
 
 from mlib import mlog
 from mlib import mcmd
-from mlib.mcommon import concat_dicts, datetimestr
+from mlib.mcommon import concat_dicts, datetimestr, usage, argspec
 from dopy.manager import DoManager
 
 
@@ -15,20 +15,24 @@ mlog:
   enabled: true
   basicconfig:
     level: 10
-    stream: sys.stdout
+    stream: sys.stderr
   fmt: default  # default | json
   patch:
     enabled: true
-    style: json # plain | color | pretty | json
+    style: pretty # plain | color | pretty | json
     targets:
     - [DoManager]
+    - [Subcmd]
 dopy:
   client_id: None
   api_key: "apikey"
   api_version: 2
 """
 
-def main(cfg):
+DoManager_help = usage(DoManager)
+
+class Subcmd(object):
+
     converter_yml = """---
     regions: all_regions
     images: all_images
@@ -36,43 +40,75 @@ def main(cfg):
     keys: all_ssh_keys
     ls: all_active_droplets
     """
-    converter = yaml.load(converter_yml)
 
-    do = DoManager(**cfg['dopy'])
-    subcmd = cfg['subcmd'] if not cfg['subcmd'] in converter else converter[cfg['subcmd']]
+    __all__ = ['help', 'new_groups']
 
-    if subcmd in ['all_regions', 'all_images', 'sizes', 'all_active_droplets','all_domains', 'all_actions', 'all_ssh_keys']:
-        method = getattr(do, subcmd)
+    @classmethod
+    def subcmds(cls):
+        return DoManager_help.keys() +  yaml.load(cls.converter_yml).keys() + cls.__all__
+
+    def noargs(self):
+        return [k for k,v in DoManager_help.items() + [] if not len(v)]  + ['help']
+
+    def converter(self, subcmd):
+        return subcmd if not subcmd in self.converter_yml else yaml.load(self.converter_yml)[subcmd]
+
+    def __init__(self):
+        self.do = None
+
+    def init_domanager(self, *args, **kwargs):
+        self.do = DoManager(*args, **kwargs)
+
+    def __getattr__(self, attrname):
+        return getattr(self.do, attrname)
+
+    def help(self):
+        #print '\n'.join(['{0:>40} {1:<40}'.format(k,v) for k,v in sorted(sorted(DoManager_help.items(),key=lambda x: x[0].split('_')[0]),key=lambda x: x[0].split('_')[-1])])
+        print '\n'.join(['{0:>40} {1:<40}'.format(k,v) for k,v in sorted(sorted(DoManager_help.items(),key=lambda x: x[1][0:]),key=lambda x: len(x[1]))])
+        return dict([(k,v) for k,v in sorted(sorted(DoManager_help.items(),key=lambda x: x[0].split('_')[0]),key=lambda x: x[0].split('_')[-1])])
+
+    def new_group(self, groupdict, template):
+        hostnames = []
+        print "groupdict.namefmt",groupdict['namefmt']
+        if 'hostnames' in groupdict.keys(): hostnames = groupdict['hostnames']
+        if 'namefmt'   in groupdict.keys(): hostnames = [groupdict['namefmt']['prefix'].format(x) for x in range(groupdict['namefmt']['start'], groupdict['namefmt']['num']+ groupdict['namefmt']['start'])]
+        print "hostnames",hostnames
+        return map(lambda x: self.new_droplet(**concat_dicts([template,{'name': x}])), hostnames)
+
+    def new_groups(self, groups, templates):
+        return map(lambda x: self.new_group(groups[x], templates[groups[x]['template']]), groups.keys()) 
+        
+
+def main(cfg):
+
+    subcmd = Subcmd()
+    subcmd.init_domanager(**cfg['dopy'])
+    attr = subcmd.converter(cfg['subcmd'])
+    if attr in subcmd.noargs():
+        method = getattr(subcmd, attr)
         return method()
-    if subcmd in ['new_droplet']:
-        method = getattr(do, subcmd)
-        result = method(**concat_dicts([cfg['new_droplet_template'], cfg['parms']] ))
-        return result
-    if subcmd in ['destroy_droplet']:
-        method = getattr(do, subcmd)
-        return method(**cfg['parms'])
-
+    method = getattr(subcmd,attr)
+    print cfg['parms']
+    return method(**cfg['parms'])
 
 if __name__=='__main__':
 
     import os
     import sys
- 
     myname = os.path.splitext(__file__)[0]
 
     defaultcfgfile =  '{0}.cfg'.format(myname) if os.path.exists('{0}.cfg'.format(myname)) else None
 
-    subcmds = ['ls', 'll', 'cat', 'images', 'sizes']
-   
+    subcmds = Subcmd.subcmds()
+ 
     args = sys.argv[1:]
     strong_subcmd = None if len(args) < 1 or not args[0] in subcmds else args.pop(0)
 
     cfg = mcmd.get_cfgdict( [ defaultcfg , defaultcfgfile ] + args)
     if strong_subcmd : cfg['subcmd'] = strong_subcmd
 
-    cfg['mlog']['basicconfig']['stream'] = "tmp/{0}.{1}".format(myname,datetimestr())
+    #cfg['mlog']['basicconfig']['stream'] = "tmp/{0}.{1}".format(myname,datetimestr())
     mlog.logconfigure(cfg['mlog'], lambda x: globals()[x])
-
     main=mcmd.store_lastfunc(main, myname)
 
     result = main(cfg)

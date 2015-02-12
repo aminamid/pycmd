@@ -1,0 +1,26 @@
+parms:
+  groups:
+    adm: {namefmt: {prefix: "adm{0:0>2}", start: 1, num: 1 }, template: 512mb }
+    cas: {namefmt: {prefix: "cas{0:0>2}", start: 1, num: 2 }, template: 1gb }
+    sca: {namefmt: {prefix: "sca{0:0>2}", start: 1, num: 2 }, template: 1gb }
+    dir: {namefmt: {prefix: "dir{0:0>2}", start: 1, num: 1 }, template: 512mb }
+    mss: {namefmt: {prefix: "mss{0:0>2}", start: 1, num: 1 }, template: 512mb }
+    imp: {namefmt: {prefix: "imp{0:0>2}", start: 1, num: 1 }, template: 512mb }
+  templates:
+    512mb:
+      size_id: 512mb
+      image_id: centos-6-5-x64
+      region_id: sgp1
+      virtio: true
+      private_networking: true
+      backups_enabled: false
+      ssh_key_ids: [ 680960, 154691 ]
+    1gb:
+      size_id: 1gb
+      image_id: centos-6-5-x64
+      region_id: sgp1
+      virtio: true
+      private_networking: true
+      backups_enabled: false
+      ssh_key_ids: [ 680960, 154691 ]
+    

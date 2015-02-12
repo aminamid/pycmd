@@ -27,4 +27,6 @@ pip install -r requirements.txt
 ./dopycmd.py cmd/droplets  | jq '.[] | { name, id, networks } '
 ./dopycmd.py do_tmp_centos64 '{subcmd: new_droplet, parms: { name: host2 } }'
 
+for i in 4127758 4127759 4127761 4127763 4127764 4127765; do ./dosh destroy_droplet "{parms:{droplet_id: $i }}" ; done;
+./dosh ls | jq '.[] | .id'
 

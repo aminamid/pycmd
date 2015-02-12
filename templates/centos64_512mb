@@ -1,4 +1,4 @@
-new_droplet_template:
+new_droplet:
   name: host
   size_id: 512mb
   image_id: centos-6-5-x64
