@@ -1,11 +1,7 @@
 parms:
   groups:
     adm: {namefmt: {prefix: "adm{0:0>2}", start: 1, num: 1 }, template: centos65_512mb }
-    cas: {namefmt: {prefix: "cas{0:0>2}", start: 1, num: 2 }, template: centos65_1gb }
-    sca: {namefmt: {prefix: "sca{0:0>2}", start: 1, num: 2 }, template: centos65_1gb }
     dir: {namefmt: {prefix: "dir{0:0>2}", start: 1, num: 1 }, template: centos65_512mb }
-    mss: {namefmt: {prefix: "mss{0:0>2}", start: 1, num: 1 }, template: centos65_512mb }
-    imp: {namefmt: {prefix: "imp{0:0>2}", start: 1, num: 1 }, template: centos65_512mb }
   templates:
     centos65_512mb:
       size_id: 512mb

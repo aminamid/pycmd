@@ -89,12 +89,13 @@ def isclassmethod( m ):
 
 def loggify(obj, objlist_tail, wrapper, log_style):
     target = reduce( getattr,  [obj] + objlist_tail )
-    attrs = [ a for (a,b) in inspect.getmembers(target) if inspect.ismethod(b) or inspect.isfunction(b) ]
-    classmethods = [ a for (a,b) in inspect.getmembers(target) if isclassmethod(b) ]
-    if not attrs:
+    if not inspect.ismodule(target) or inspect.isclass(target):
         target = wrapper(target,target.__name__, log_style)
     else:
-        for attr in attrs:
+        for attr in [ a for (a,b) in inspect.getmembers(target) if inspect.ismethod(b) or inspect.isfunction(b) ]:
+            if inspect.ismethod(getattr(target, attr)) : print "ismethod"
+            if inspect.isfunction(getattr(target, attr)) : print "isfunction"
+            print "target,target.__name__,attr:",target,target.__name__,attr
             setattr(target, attr, wrapper(getattr(target, attr),target.__name__, log_style))
 
 def logconfigure(mlogcfg, get_mainglobs):

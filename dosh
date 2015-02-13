@@ -22,7 +22,7 @@ mlog:
     style: pretty # plain | color | pretty | json
     targets:
     - [DoManager]
-    - [Subcmd]
+    - [Subcmd, new_groups]
 dopy:
   client_id: None
   api_key: "apikey"
@@ -69,10 +69,8 @@ class Subcmd(object):
 
     def new_group(self, groupdict, template):
         hostnames = []
-        print "groupdict.namefmt",groupdict['namefmt']
         if 'hostnames' in groupdict.keys(): hostnames = groupdict['hostnames']
         if 'namefmt'   in groupdict.keys(): hostnames = [groupdict['namefmt']['prefix'].format(x) for x in range(groupdict['namefmt']['start'], groupdict['namefmt']['num']+ groupdict['namefmt']['start'])]
-        print "hostnames",hostnames
         return map(lambda x: self.new_droplet(**concat_dicts([template,{'name': x}])), hostnames)
 
     def new_groups(self, groups, templates):
@@ -88,7 +86,6 @@ def main(cfg):
         method = getattr(subcmd, attr)
         return method()
     method = getattr(subcmd,attr)
-    print cfg['parms']
     return method(**cfg['parms'])
 
 if __name__=='__main__':
